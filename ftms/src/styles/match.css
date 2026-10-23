@@ -1,0 +1,518 @@
+/* ==========================================================================
+   Match lists, cards, date strip
+   ========================================================================== */
+
+/* ---------- Match row ---------- */
+.mrow {
+  position: relative;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 84px minmax(0, 1fr) minmax(36px, auto);
+  grid-template-areas: 'st hm sc aw en';
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 8px 14px 8px 16px;
+  transition: background-color var(--dur-1) ease;
+}
+
+.mrow + .mrow {
+  border-top: 1px solid var(--divider);
+}
+
+.mrow:hover {
+  background: var(--surface-hover);
+}
+
+.mrow.is-flash {
+  animation: row-flash 2.4s var(--ease-out);
+}
+
+@keyframes row-flash {
+  0%,
+  30% {
+    background: var(--accent-soft);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+.mrow-status {
+  grid-area: st;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-12);
+  font-weight: 600;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.mrow-status.is-live {
+  color: var(--live);
+  font-weight: 700;
+}
+
+.mrow-status.is-done {
+  color: var(--text-3);
+}
+
+.mrow-team {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-size: var(--fs-14);
+  font-weight: 550;
+  color: var(--text);
+}
+
+.mrow-team.home {
+  grid-area: hm;
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+.mrow-team.away {
+  grid-area: aw;
+}
+
+.mrow-team.is-loser {
+  color: var(--text-2);
+}
+
+.mrow-team.is-winner {
+  font-weight: 700;
+}
+
+.mrow-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.mrow-score {
+  grid-area: sc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 30px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  font-size: var(--fs-15);
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.mrow.is-live .mrow-score {
+  background: var(--live-soft);
+  color: var(--live);
+}
+
+.mrow-score.is-pre {
+  background: transparent;
+}
+
+.mrow-score .sep {
+  color: var(--text-3);
+  font-weight: 500;
+}
+
+.mrow-score .is-loser {
+  color: var(--text-2);
+}
+
+.mrow.is-live .mrow-score .is-loser {
+  color: inherit;
+}
+
+.mrow-score .vs {
+  font-size: var(--fs-12);
+  color: var(--text-3);
+  font-weight: 500;
+}
+
+.score-num {
+  display: inline-block;
+  min-width: 10px;
+  text-align: center;
+  overflow: hidden;
+}
+
+.mrow-end {
+  grid-area: en;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.mrow-note {
+  font-size: var(--fs-11);
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .mrow {
+    grid-template-columns: 50px minmax(0, 1fr) 26px auto;
+    grid-template-areas:
+      'st hm hs en'
+      'st aw as en';
+    row-gap: 6px;
+    column-gap: 10px;
+    padding: 10px 12px 10px 14px;
+  }
+
+  .mrow-team.home {
+    flex-direction: row;
+    text-align: left;
+  }
+
+  .mrow-score {
+    display: contents;
+  }
+
+  .mrow-score .h,
+  .mrow-score .a {
+    text-align: right;
+    font-size: var(--fs-15);
+    font-weight: 750;
+  }
+
+  .mrow-score .h {
+    grid-area: hs;
+  }
+
+  .mrow-score .a {
+    grid-area: as;
+  }
+
+  .mrow-score .sep,
+  .mrow-score .vs {
+    display: none;
+  }
+
+  .mrow.is-live .mrow-score .h,
+  .mrow.is-live .mrow-score .a {
+    color: var(--live);
+  }
+
+  .mrow-status {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+  }
+
+  .mrow-team {
+    font-size: var(--fs-14);
+  }
+}
+
+/* ---------- League group ---------- */
+.lgroup {
+  overflow: hidden;
+}
+
+.lgroup-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px 10px 16px;
+  border-bottom: 1px solid var(--divider);
+  background: var(--surface);
+}
+
+.lgroup-link {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lgroup-link > .grow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+a.lgroup-link:hover .lgroup-name {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--border-strong);
+}
+
+.lgroup-name {
+  font-size: var(--fs-14);
+  font-weight: 650;
+  display: block;
+}
+
+.lgroup-country {
+  font-size: var(--fs-12);
+  color: var(--text-3);
+  display: block;
+}
+
+.lgroup-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+/* ---------- Live card ---------- */
+.rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 264px;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding: 2px 2px 6px;
+  margin: -2px;
+  overscroll-behavior-x: contain;
+}
+
+.rail::-webkit-scrollbar {
+  display: none;
+}
+
+.rail > * {
+  scroll-snap-align: start;
+}
+
+.lcard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px 12px;
+  height: 100%;
+}
+
+.lcard.is-live {
+  border-color: color-mix(in srgb, var(--live) 28%, var(--border));
+}
+
+.lcard-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--fs-12);
+}
+
+.lcard-league {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-3);
+  font-weight: 550;
+  min-width: 0;
+}
+
+.lcard-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.lcard-team {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--fs-14);
+  font-weight: 600;
+}
+
+.lcard-team.is-loser {
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+.lcard-name {
+  flex: 1;
+}
+
+.lcard-score {
+  font-size: var(--fs-18);
+  font-weight: 800;
+}
+
+.lcard.is-live .lcard-score {
+  color: var(--text);
+}
+
+.lcard-foot {
+  margin-top: auto;
+  padding-top: 2px;
+  min-height: 18px;
+  display: flex;
+  align-items: center;
+}
+
+.lcard-progress {
+  width: 100%;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.lcard-progress span {
+  display: block;
+  height: 100%;
+  background: var(--live);
+  border-radius: 2px;
+}
+
+/* ---------- Date strip ---------- */
+.datestrip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+
+.datestrip-days {
+  flex: 1;
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+  padding: 0 16px;
+}
+
+.datestrip-days::-webkit-scrollbar {
+  display: none;
+}
+
+.dday {
+  position: relative;
+  flex: 0 0 auto;
+  min-width: 58px;
+  height: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  border-radius: var(--r-md);
+  color: var(--text-2);
+  isolation: isolate;
+  transition: color var(--dur-1) ease;
+}
+
+.dday:hover {
+  color: var(--text);
+}
+
+.dday.is-active {
+  color: var(--accent-ink);
+}
+
+.dday-pill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--accent);
+  z-index: -1;
+}
+
+.dday-wd {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+
+.dday-num {
+  font-size: var(--fs-16);
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.dday.is-today:not(.is-active) .dday-wd {
+  color: var(--accent-text);
+  opacity: 1;
+}
+
+.datestrip-cal {
+  position: relative;
+  cursor: pointer;
+}
+
+.datestrip-cal input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+}
+
+/* ---------- Scores toolbar ---------- */
+.scores-toolbar {
+  position: sticky;
+  top: var(--topbar-h);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 0;
+  margin: -12px 0 0;
+  background: linear-gradient(var(--bg) 82%, transparent);
+}
+
+.scores-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.scores-filters .input-icon {
+  flex: 1;
+  min-width: 200px;
+  max-width: 360px;
+}
+
+.refresh-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-12);
+  color: var(--text-3);
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 767px) {
+  .scores-toolbar {
+    top: 56px;
+  }
+
+  .scores-filters .input-icon {
+    max-width: none;
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .refresh-meta {
+    margin-left: 0;
+  }
+}

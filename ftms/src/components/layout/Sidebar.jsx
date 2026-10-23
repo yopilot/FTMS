@@ -1,82 +1,102 @@
-import { NavLink } from 'react-router-dom';
-import { 
-  Home, 
-  Users, 
-  Trophy, 
-  BarChart2, 
-  HardDrive 
-} from 'lucide-react';
+import { NavLink, Link } from 'react-router-dom';
+import { motion } from 'motion/react';
+import { LogIn } from 'lucide-react';
+import BrandMark from './BrandMark';
+import Crest from '../ui/Crest';
+import { MAIN_NAV, MANAGER_NAV, SETTINGS_NAV } from './navItems';
+import { useFavorites } from '../../context/FavoritesContext';
+import { useAuth } from '../../context/AuthContext';
+import { LiveDot } from '../ui/Bits';
 
-export default function Sidebar() {
-  const navItems = [
-    { to: '/', label: 'Home', icon: Home },
-    { to: '/players', label: 'Squad Roster', icon: Users },
-    { to: '/matches', label: 'Matches', icon: Trophy },
-    { to: '/stats', label: 'Stats', icon: BarChart2 },
-    { to: '/backup', label: 'Backup', icon: HardDrive },
-  ];
+function NavItem({ item, liveCount }) {
+  const Icon = item.icon;
+  return (
+    <NavLink to={item.to} end={item.end} className={({ isActive }) => `nav-item ${isActive ? 'is-active' : ''}`} title={item.label}>
+      {({ isActive }) => (
+        <>
+          {isActive && <motion.span layoutId="nav-pill" className="nav-pill" transition={{ type: 'spring', stiffness: 520, damping: 42 }} />}
+          <Icon size={18} strokeWidth={2} />
+          <span className="nav-text">{item.label}</span>
+          {item.live && liveCount > 0 && (
+            <span className="nav-count" aria-label={`${liveCount} live matches`}>
+              <LiveDot />
+              <span className="nav-count-num">{liveCount}</span>
+            </span>
+          )}
+        </>
+      )}
+    </NavLink>
+  );
+}
+
+export default function Sidebar({ liveCount }) {
+  const { teams } = useFavorites();
+  const { session } = useAuth();
 
   return (
-    <aside className="sidebar">
-      {/* Brand Header */}
-      <div className="sidebar-brand">
-        <div className="brand-icon-box" aria-hidden="true">
-          {/* Tactical notebook / pitch logo */}
-          <svg 
-            width="22" 
-            height="22" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2.2" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-            className="brand-svg"
-          >
-            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
-            <path d="M6 6h10" />
-            <path d="M6 10h10" />
-            <circle cx="11" cy="15" r="2" />
-          </svg>
-        </div>
-        <div className="brand-text">
-          <span className="brand-title">Team Manager</span>
-          <span className="brand-subtitle">Sunday Squad notebook</span>
-        </div>
-      </div>
+    <aside className="sidebar" aria-label="Primary">
+      <Link to="/" className="brand" aria-label="FTMS home">
+        <BrandMark />
+        <span className="brand-text">
+          <span className="brand-name">FTMS</span>
+          <span className="brand-tag" style={{ display: 'block' }}>
+            Football, live
+          </span>
+        </span>
+      </Link>
 
-      {/* Main Navigation Links */}
-      <nav className="sidebar-nav" aria-label="Main Navigation">
-        <ul className="nav-list">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <li key={item.to} className="nav-item">
-                <NavLink
-                  to={item.to}
-                  end={item.to === '/'}
-                  className={({ isActive }) =>
-                    `nav-link ${isActive ? 'active' : ''}`
-                  }
-                >
-                  <Icon className="nav-icon" size={18} strokeWidth={2.2} />
-                  <span className="nav-label">{item.label}</span>
-                </NavLink>
-              </li>
-            );
-          })}
-        </ul>
+      <nav className="nav-group" aria-label="Main">
+        {MAIN_NAV.map((item) => (
+          <NavItem key={item.to} item={item} liveCount={liveCount} />
+        ))}
       </nav>
 
-      {/* Bottom Local Storage Indicator */}
-      <div className="sidebar-footer">
-        <div className="local-storage-card">
-          <div className="storage-status-row">
-            <span className="storage-dot" aria-hidden="true"></span>
-            <span className="storage-title">Local storage</span>
-          </div>
-          <p className="storage-desc">Saved in this browser only</p>
+      <div className="nav-group">
+        <div className="nav-label">Manage</div>
+        <NavItem item={MANAGER_NAV} />
+      </div>
+
+      {teams.length > 0 && (
+        <div className="nav-group nav-follows">
+          <div className="nav-label">Following</div>
+          {teams.slice(0, 8).map((t) => (
+            <Link key={t.id} to={`/team/${t.id}`} className="nav-follow">
+              <Crest src={t.logo} name={t.name} size={18} />
+              <span className="truncate">{t.name}</span>
+            </Link>
+          ))}
         </div>
+      )}
+
+      <div className="sidebar-foot">
+        <NavItem item={SETTINGS_NAV} />
+        {session ? (
+          <Link to="/manager" className="club-chip" title={`${session.clubName} — manager hub`}>
+            <Crest src={session.logo} srcDark={session.logoDark} name={session.clubName} color={session.color} size={28} />
+            <span className="club-chip-text grow">
+              <span className="club-chip-name truncate" style={{ display: 'block' }}>
+                {session.clubShort || session.clubName}
+              </span>
+              <span className="club-chip-sub truncate" style={{ display: 'block' }}>
+                {session.managerName}
+              </span>
+            </span>
+          </Link>
+        ) : (
+          <Link to="/manager" className="club-chip" title="Manager login">
+            <span className="cmdk-item-icon" style={{ width: 28, height: 28 }}>
+              <LogIn size={15} />
+            </span>
+            <span className="club-chip-text grow">
+              <span className="club-chip-name" style={{ display: 'block' }}>
+                Manager login
+              </span>
+              <span className="club-chip-sub" style={{ display: 'block' }}>
+                Run a real club
+              </span>
+            </span>
+          </Link>
+        )}
       </div>
     </aside>
   );

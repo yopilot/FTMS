@@ -1,133 +1,111 @@
 import db from '../db/database';
+import { listKeys, readJSON, writeJSON, removeKey } from '../lib/storage';
+
+// Everything the app stores on this device:
+//  - IndexedDB (Dexie): the custom club's players, matches and stats
+//  - localStorage: settings, follows, manager session, lineups/tactics per club
+// Cached API responses (cache.*) are skipped; they rebuild themselves.
+
+const TABLES = ['players', 'matches', 'statDefinitions', 'playerStats', 'settings'];
+
+function localSnapshot() {
+  const out = {};
+  listKeys()
+    .filter((k) => !k.startsWith('cache.') && k !== 'session')
+    .forEach((k) => {
+      out[k] = readJSON(k, null);
+    });
+  return out;
+}
 
 export const backupService = {
-  /**
-   * Export all application data as a JSON object
-   */
   async exportData() {
-    const [players, matches, statDefinitions, playerStats, settings] = await Promise.all([
-      db.players.toArray(),
-      db.matches.toArray(),
-      db.statDefinitions.toArray(),
-      db.playerStats.toArray(),
-      db.settings.toArray(),
-    ]);
-
-    const backup = {
-      schemaVersion: 1,
-      appName: 'FootballTeamManager',
+    const [players, matches, statDefinitions, playerStats, settings] = await Promise.all(TABLES.map((t) => db[t].toArray()));
+    return {
+      schemaVersion: 2,
+      appName: 'FTMS',
       exportedAt: new Date().toISOString(),
-      data: {
-        players,
-        matches,
-        statDefinitions,
-        playerStats,
-        settings,
-      },
+      data: { players, matches, statDefinitions, playerStats, settings },
+      local: localSnapshot(),
     };
-
-    return backup;
   },
 
-  /**
-   * Download the backup JSON file to client browser
-   */
   async downloadBackup() {
     const backup = await this.exportData();
-    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(backup, null, 2));
-    const downloadAnchor = document.createElement('a');
-    const dateStr = new Date().toISOString().split('T')[0];
-    downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `ftms-backup-${dateStr}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
-
-    // Record last backup timestamp in settings
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ftms-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
     await db.settings.put({ key: 'lastBackup', value: new Date().toISOString() });
     return backup;
   },
 
-  /**
-   * Validate uploaded backup JSON
-   */
   validateBackup(json) {
-    if (!json || typeof json !== 'object') {
-      throw new Error('Invalid JSON format: file does not contain a valid JSON object.');
-    }
-
-    if (!json.schemaVersion || !json.data) {
-      throw new Error('Incompatible backup file: missing schemaVersion or data container.');
-    }
-
+    if (!json || typeof json !== 'object') throw new Error('This file is not a valid backup.');
+    if (!json.schemaVersion || !json.data) throw new Error('This file is missing the backup data. Was it exported from FTMS?');
     const { players, matches, statDefinitions, playerStats } = json.data;
-    if (!Array.isArray(players) || !Array.isArray(matches)) {
-      throw new Error('Invalid backup data structure: players and matches must be lists.');
-    }
-
+    if (!Array.isArray(players) || !Array.isArray(matches)) throw new Error('The backup is damaged: players and matches must be lists.');
     return {
       isValid: true,
       schemaVersion: json.schemaVersion,
-      exportedAt: json.exportedAt || 'Unknown',
+      exportedAt: json.exportedAt || null,
       summary: {
         playersCount: players.length,
         matchesCount: matches.length,
         statDefinitionsCount: Array.isArray(statDefinitions) ? statDefinitions.length : 0,
         playerStatsCount: Array.isArray(playerStats) ? playerStats.length : 0,
+        localKeys: json.local ? Object.keys(json.local).length : 0,
       },
     };
   },
 
-  /**
-   * Restore database from backup using transaction replacement strategy
-   */
-  async restoreData(backupJson) {
-    this.validateBackup(backupJson);
+  async restoreData(json) {
+    this.validateBackup(json);
+    const { players = [], matches = [], statDefinitions = [], playerStats = [], settings = [] } = json.data;
 
-    const { players = [], matches = [], statDefinitions = [], playerStats = [], settings = [] } = backupJson.data;
-
-    await db.transaction('rw', [db.players, db.matches, db.statDefinitions, db.playerStats, db.settings], async () => {
-      // Clear existing records
-      await Promise.all([
-        db.players.clear(),
-        db.matches.clear(),
-        db.statDefinitions.clear(),
-        db.playerStats.clear(),
-        db.settings.clear(),
-      ]);
-
-      // Bulk add restored data
+    await db.transaction('rw', TABLES.map((t) => db[t]), async () => {
+      await Promise.all(TABLES.map((t) => db[t].clear()));
       if (players.length) await db.players.bulkAdd(players);
       if (matches.length) await db.matches.bulkAdd(matches);
       if (statDefinitions.length) await db.statDefinitions.bulkAdd(statDefinitions);
       if (playerStats.length) await db.playerStats.bulkAdd(playerStats);
       if (settings.length) await db.settings.bulkAdd(settings);
-
-      // Record last restored setting
       await db.settings.put({ key: 'lastRestored', value: new Date().toISOString() });
     });
 
+    if (json.local && typeof json.local === 'object') {
+      Object.entries(json.local).forEach(([k, v]) => {
+        if (!k.startsWith('cache.') && k !== 'session') writeJSON(k, v);
+      });
+    }
     return true;
   },
 
-  /**
-   * Get metadata info about storage and last backup
-   */
   async getStorageInfo() {
-    const lastBackupSetting = await db.settings.get('lastBackup');
-    const lastRestoredSetting = await db.settings.get('lastRestored');
-    const [playersCount, matchesCount, statsCount] = await Promise.all([
+    const [lastBackup, lastRestored, playersCount, matchesCount, statsCount] = await Promise.all([
+      db.settings.get('lastBackup'),
+      db.settings.get('lastRestored'),
       db.players.count(),
       db.matches.count(),
       db.playerStats.count(),
     ]);
-
     return {
       playersCount,
       matchesCount,
       statsCount,
-      lastBackup: lastBackupSetting ? lastBackupSetting.value : null,
-      lastRestored: lastRestoredSetting ? lastRestoredSetting.value : null,
+      lastBackup: lastBackup?.value || null,
+      lastRestored: lastRestored?.value || null,
     };
+  },
+
+  /** Wipes everything stored on this device and reloads. */
+  async resetEverything() {
+    await db.delete();
+    listKeys().forEach((k) => removeKey(k));
   },
 };

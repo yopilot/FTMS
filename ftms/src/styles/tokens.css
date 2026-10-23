@@ -1,0 +1,186 @@
+/* ==========================================================================
+   Design tokens
+   Dark is the default theme. Light theme overrides live under [data-theme].
+   ========================================================================== */
+
+:root {
+  /* Type */
+  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  --fs-11: 11px;
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-15: 15px;
+  --fs-16: 16px;
+  --fs-18: 18px;
+  --fs-20: 20px;
+  --fs-24: 24px;
+  --fs-28: 28px;
+  --fs-32: 32px;
+  --fs-40: 40px;
+
+  /* Spacing (4px grid) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+
+  /* Radius */
+  --r-xs: 6px;
+  --r-sm: 8px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 18px;
+  --r-full: 999px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 320ms;
+
+  /* Layout */
+  --sidebar-w: 248px;
+  --sidebar-w-collapsed: 72px;
+  --topbar-h: 60px;
+  --bottomnav-h: 64px;
+  --content-max: 1280px;
+
+  /* ---------- Dark theme (default) ---------- */
+  color-scheme: dark;
+
+  --bg: #0b0c0e;
+  --bg-subtle: #0e1012;
+  --surface: #131518;
+  --surface-2: #181b1f;
+  --surface-3: #1e2126;
+  --surface-hover: #1b1e22;
+  --surface-press: #22262b;
+  --overlay: rgba(4, 5, 6, 0.72);
+
+  --border: #22252a;
+  --border-strong: #2f3339;
+  --divider: #1c1f23;
+
+  --text: #f2f3f5;
+  --text-2: #a4aab4;
+  --text-3: #6f7681;
+  --text-inverse: #0b0c0e;
+
+  --accent: #c4f25c;
+  --accent-hover: #d3f784;
+  --accent-ink: #0b0c0e;
+  --accent-text: #c4f25c;
+  --accent-soft: rgba(196, 242, 92, 0.12);
+  --accent-ring: rgba(196, 242, 92, 0.45);
+
+  --live: #ff5a5f;
+  --live-soft: rgba(255, 90, 95, 0.14);
+  --success: #34d399;
+  --success-soft: rgba(52, 211, 153, 0.14);
+  --warning: #fbbf24;
+  --warning-soft: rgba(251, 191, 36, 0.14);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.14);
+  --info: #60a5fa;
+  --info-soft: rgba(96, 165, 250, 0.14);
+
+  --win: #34d399;
+  --draw: #8b919b;
+  --loss: #f87171;
+
+  /* Match ratings (0-10) */
+  --rt-elite: #4f8cff;
+  --rt-great: #22c55e;
+  --rt-good: #84cc16;
+  --rt-avg: #f59e0b;
+  --rt-poor: #ef4444;
+
+  /* Card tiers */
+  --tier-gold: #e8c766;
+  --tier-silver: #c4cad3;
+  --tier-bronze: #c98a5b;
+
+  --pitch-a: #13301f;
+  --pitch-b: #163724;
+  --pitch-line: rgba(255, 255, 255, 0.16);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
+  --skeleton-a: #181b1f;
+  --skeleton-b: #22262b;
+}
+
+/* ---------- Light theme ---------- */
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #f5f6f7;
+  --bg-subtle: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f4f5f7;
+  --surface-3: #eceef1;
+  --surface-hover: #f2f3f5;
+  --surface-press: #e9ebee;
+  --overlay: rgba(16, 18, 22, 0.42);
+
+  --border: #e5e7eb;
+  --border-strong: #d4d8de;
+  --divider: #eef0f2;
+
+  --text: #0e1013;
+  --text-2: #4f5763;
+  --text-3: #868d98;
+  --text-inverse: #ffffff;
+
+  --accent: #c4f25c;
+  --accent-hover: #b6e84a;
+  --accent-ink: #0e1013;
+  --accent-text: #3f6d07;
+  --accent-soft: rgba(132, 204, 22, 0.14);
+  --accent-ring: rgba(101, 163, 13, 0.45);
+
+  --live: #e5343a;
+  --live-soft: rgba(229, 52, 58, 0.1);
+  --success: #059669;
+  --success-soft: rgba(5, 150, 105, 0.1);
+  --warning: #b45309;
+  --warning-soft: rgba(217, 119, 6, 0.12);
+  --danger: #dc2626;
+  --danger-soft: rgba(220, 38, 38, 0.08);
+  --info: #2563eb;
+  --info-soft: rgba(37, 99, 235, 0.08);
+
+  --win: #059669;
+  --draw: #8a919c;
+  --loss: #dc2626;
+
+  --rt-elite: #2563eb;
+  --rt-great: #16a34a;
+  --rt-good: #65a30d;
+  --rt-avg: #d97706;
+  --rt-poor: #dc2626;
+
+  --tier-gold: #b8912a;
+  --tier-silver: #7d8591;
+  --tier-bronze: #a5653a;
+
+  --pitch-a: #2f7d4a;
+  --pitch-b: #348652;
+  --pitch-line: rgba(255, 255, 255, 0.4);
+
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow-md: 0 8px 24px rgba(16, 24, 40, 0.08);
+  --shadow-lg: 0 24px 64px rgba(16, 24, 40, 0.16);
+  --skeleton-a: #eef0f2;
+  --skeleton-b: #e3e6ea;
+}
